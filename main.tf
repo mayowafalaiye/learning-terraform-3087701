@@ -1,4 +1,3 @@
-# Define data block to retrieve the latest AWS AMI based on specified filters
 data "aws_ami" "app_ami" {
   most_recent = true
 
@@ -15,10 +14,8 @@ data "aws_ami" "app_ami" {
   owners = ["979382823631"] # Bitnami
 }
 
-# Create an AWS VPC using the "terraform-aws-modules/vpc/aws" module
-module "aws_default_vpc" {
+module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
-  version = "3.0.0"
 
   name = "dev"
   cidr = "10.0.0.0/16"
@@ -29,37 +26,30 @@ module "aws_default_vpc" {
   enable_nat_gateway = true
 
   tags = {
-    Terraform   = "true"
+    Terraform = "true"
     Environment = "dev"
   }
 }
 
-
-
-# Launch an AWS EC2 instance using the specified AMI and instance type
 resource "aws_instance" "blog" {
   ami           = data.aws_ami.app_ami.id
   instance_type = var.instance_type
 
-  vpc_security_group_ids  = [module.blog_sg.security_group_id]
-
+  vpc_security_group_ids  =  [module.blog_sg.security_group_id]
   tags = {
     Name = "HelloWorld"
   }
 }
 
-# Create an AWS security group using the "terraform-aws-modules/security-group/aws" module
 module "blog_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "5.1.0"
-
   name    = "blog"
-  vpc_id  = module.vpc.vpc_id
 
-  ingress_rules = [
-    "tcp,80,80,0.0.0.0/0",
-    "tcp,443,443,0.0.0.0/0",
-  ]
+vpc_id  =  module.vpc.public_subnets[0]
 
-  # Omit the egress_rules and egress_cidr_blocks, as outbound traffic is allowed by default.
+  ingress_rules = ["http-80-tcp", "https-443-tcp"]
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+  egress_rules = ["all-all"]
+  egress_cidr_blocks = ["0.0.0.0/0"]
 }
