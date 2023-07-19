@@ -18,13 +18,15 @@ data "aws_ami" "app_ami" {
 # Create an AWS VPC using the "terraform-aws-modules/vpc/aws" module
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
-  version = "3.0.0"  # Use a specific version of the module for version pinning
+  version = "3.0.0"
 
   name = "dev"
   cidr = "10.0.0.0/16"
 
   azs             = ["us-west-2a", "us-west-2b", "us-west-2c"]
   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+
+  # Remove the unsupported arguments enable_classiclink and enable_classiclink_dns_support
 
   enable_nat_gateway = true
 
@@ -49,30 +51,15 @@ resource "aws_instance" "blog" {
 # Create an AWS security group using the "terraform-aws-modules/security-group/aws" module
 module "blog_sg" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "5.1.0"  # Use a specific version of the module for version pinning
+  version = "5.1.0"
 
   name    = "blog"
-
-  vpc_id  = module.vpc.vpc_id  # Use the VPC ID from the created VPC module
+  vpc_id  = module.vpc.vpc_id
 
   ingress_rules = [
-    {
-      description      = "Allow HTTP inbound traffic"
-      from_port        = 80
-      to_port          = 80
-      protocol         = "tcp"
-      cidr_blocks      = ["0.0.0.0/0"]
-    },
-    {
-      description      = "Allow HTTPS inbound traffic"
-      from_port        = 443
-      to_port          = 443
-      protocol         = "tcp"
-      cidr_blocks      = ["0.0.0.0/0"]
-    },
+    "tcp,80,80,0.0.0.0/0",
+    "tcp,443,443,0.0.0.0/0",
   ]
 
-  # For egress rules, it's not necessary to explicitly allow all traffic (all-all), 
-  # as all outbound traffic is allowed by default. We can omit the egress_rules and egress_cidr_blocks.
-  # If you want to restrict egress traffic, you can explicitly define the egress_rules as needed.
+  # Omit the egress_rules and egress_cidr_blocks, as outbound traffic is allowed by default.
 }
