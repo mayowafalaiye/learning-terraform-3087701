@@ -28,8 +28,6 @@ module "vpc" {
 
   # Remove the unsupported arguments enable_classiclink and enable_classiclink_dns_support
 
-  enable_nat_gateway = true
-
   tags = {
     Terraform   = "true"
     Environment = "dev"
