@@ -18,7 +18,7 @@ data "aws_ami" "app_ami" {
 # Create an AWS VPC using the "terraform-aws-modules/vpc/aws" module
 module "aws_default_vpc" {
   source = "terraform-aws-modules/vpc/aws"
-  version = "X.Y.Z"  # Replace with a version that supports enable_classiclink
+  version = "3.0.0"  # Replace with a version that supports enable_classiclink
 
   name = "dev"
   cidr = "10.0.0.0/16"
